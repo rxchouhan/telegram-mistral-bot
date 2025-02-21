@@ -19,8 +19,8 @@ def format_response(text):
         return "Error: No valid response content found."
 
     # Convert headers
-    text = re.sub(r"(?m)^###\s*", "📌 ", text)  # Convert ### to 📌
-    text = re.sub(r"(?m)^####\s*", "🔹 ", text)  # Convert #### to 🔹
+    text = re.sub(r"(?m)^####\s*", "🔹 ", text)  # Convert #### to 🔹 (done first to prevent interference)
+    text = re.sub(r"(?m)^###\s*", "📌 ", text)   # Convert ### to 📌
 
     # Convert **bold** to Telegram MarkdownV2 *bold*
     text = re.sub(r"\*\*(.*?)\*\*", r"*\1*", text)
