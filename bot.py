@@ -15,7 +15,7 @@ def get_mistral_response(message):
         "Content-Type": "application/json"
     }
     payload = {
-        "model": "mistral-small-latest",  # Updated model name
+        "model": "mistral-small-latest",  # Ensure correct model name
         "prompt": message,
         "max_tokens": 100
     }
@@ -23,7 +23,16 @@ def get_mistral_response(message):
     try:
         response = requests.post(url, headers=headers, json=payload)
         response_json = response.json()
-        return response_json.get("choices", [{}])[0].get("text", "Sorry, I couldn't generate a response.")
+
+        # Debugging: Print API response in logs
+        print("Mistral API Response:", response_json)
+
+        # Extract AI-generated text
+        if "choices" in response_json and len(response_json["choices"]) > 0:
+            return response_json["choices"][0].get("text", "No response generated.")
+        else:
+            return "Sorry, no valid response from Mistral."
+    
     except Exception as e:
         return f"Error: {str(e)}"
 
