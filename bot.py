@@ -8,24 +8,25 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
 
+def escape_markdown_v2(text):
+    """Escapes special characters for Telegram MarkdownV2."""
+    special_chars = "_*[]()~`>#+-=|{}.!"
+    return "".join(f"\\{char}" if char in special_chars else char for char in text)
+
 def format_response(text):
-    """Formats response for Telegram MarkdownV2."""
+    """Formats API response for Telegram with proper MarkdownV2."""
     if not text:
         return "Error: No valid response content found."
-
-    # Escape special characters for Telegram MarkdownV2
-    escape_chars = "_~`>+=|{}.!"
-    for char in escape_chars:
-        text = text.replace(char, f"\\{char}")
 
     # Convert headers
     text = re.sub(r"(?m)^###\s*", "📌 ", text)  # Convert ### to 📌
     text = re.sub(r"(?m)^####\s*", "🔹 ", text)  # Convert #### to 🔹
 
-    # Convert **bold** to *bold* (Telegram format)
+    # Convert **bold** to Telegram *bold* format
     text = re.sub(r"\*\*(.*?)\*\*", r"*\1*", text)
 
-    return text
+    # Escape Telegram MarkdownV2 special characters
+    return escape_markdown_v2(text)
 
 # Function to call Mistral API
 def get_mistral_response(message):
@@ -56,9 +57,9 @@ def get_mistral_response(message):
         return f"Unexpected API response format: {response_json}"
 
     except requests.exceptions.RequestException as e:
-        return f"API Request Error: {str(e)}"
+        return f"API Request Error: {escape_markdown_v2(str(e))}"
     except Exception as e:
-        return f"Unexpected Error: {str(e)}"
+        return f"Unexpected Error: {escape_markdown_v2(str(e))}"
 
 # Start command
 async def start(update: Update, context: CallbackContext):
