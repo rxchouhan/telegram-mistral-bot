@@ -1,29 +1,51 @@
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, CallbackContext
 import requests
 import os
-from telegram import Update
-from telegram.ext import Updater, MessageHandler, Filters, CallbackContext
 
+# Load API keys from environment variables
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
-MISTRAL_API_URL = "https://api.mistral.ai/v1/chat/completions"
 
-def get_mistral_response(prompt):
-    headers = {"Authorization": f"Bearer {MISTRAL_API_KEY}", "Content-Type": "application/json"}
-    data = {"model": "mistral-small", "messages": [{"role": "user", "content": prompt}]}
-    response = requests.post(MISTRAL_API_URL, json=data, headers=headers)
-    return response.json().get("choices", [{}])[0].get("message", {}).get("content", "No response")
+# Function to call Mistral API
+def get_mistral_response(message):
+    url = "https://api.mistral.ai/v1/completions"
+    headers = {
+        "Authorization": f"Bearer {MISTRAL_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": "mistral-small-latest",  # Updated model name
+        "prompt": message,
+        "max_tokens": 100
+    }
+    
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        response_json = response.json()
+        return response_json.get("choices", [{}])[0].get("text", "Sorry, I couldn't generate a response.")
+    except Exception as e:
+        return f"Error: {str(e)}"
 
-def handle_message(update: Update, context: CallbackContext):
+# Start command
+async def start(update: Update, context: CallbackContext):
+    await update.message.reply_text("Hello! I am a Telegram bot powered by Mistral AI. Send me a message!")
+
+# Message handler
+async def handle_message(update: Update, context: CallbackContext):
     user_message = update.message.text
-    ai_response = get_mistral_response(user_message)
-    update.message.reply_text(ai_response)
+    bot_response = get_mistral_response(user_message)
+    await update.message.reply_text(bot_response)
 
+# Main function to start the bot
 def main():
-    updater = Updater(TELEGRAM_BOT_TOKEN, use_context=True)
-    dp = updater.dispatcher
-    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
-    updater.start_polling()
-    updater.idle()
+    app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
+    
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    
+    print("Bot is running...")
+    app.run_polling()
 
 if __name__ == "__main__":
     main()
