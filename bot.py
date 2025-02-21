@@ -9,14 +9,14 @@ MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
 
 # Function to call Mistral API
 def get_mistral_response(message):
-    url = "https://api.mistral.ai/v1/completions"
+    url = "https://api.mistral.ai/v1/chat/completions"  # Updated endpoint
     headers = {
         "Authorization": f"Bearer {MISTRAL_API_KEY}",
         "Content-Type": "application/json"
     }
     payload = {
         "model": "mistral-small-latest",
-        "prompt": message,
+        "messages": [{"role": "user", "content": message}],  # Updated payload
         "max_tokens": 100
     }
 
@@ -25,15 +25,15 @@ def get_mistral_response(message):
         response_json = response.json()
 
         # Print API response for debugging
-        print("Mistral API Response:", response_json)
+        print("Mistral API Raw Response:", response_json)
 
         # Extract AI-generated text
         if "choices" in response_json and response_json["choices"]:
-            return response_json["choices"][0].get("text", "No text returned by Mistral.")
+            return response_json["choices"][0]["message"]["content"]
         elif "error" in response_json:
-            return f"Error: {response_json['error']}"
+            return f"Error: {response_json['error']['message']}"
         else:
-            return "Unexpected API response format."
+            return f"Unexpected API response format: {response_json}"
 
     except Exception as e:
         return f"API Error: {str(e)}"
