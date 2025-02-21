@@ -28,15 +28,11 @@ def get_mistral_response(message):
         print("Mistral API Raw Response:", response_json)
 
         # Ensure the response contains 'choices' and extract content safely
-        if isinstance(response_json, dict):
-            if "choices" in response_json and response_json["choices"]:
-                first_choice = response_json["choices"][0]
-                if isinstance(first_choice, dict) and "message" in first_choice and "content" in first_choice["message"]:
-                    return first_choice["message"]["content"]
-                else:
-                    return "Error: No valid response content found."
-            elif "error" in response_json:
-                return f"Error: {response_json['error'].get('message', 'Unknown API error')}"
+        if isinstance(response_json, dict) and "choices" in response_json:
+            choices = response_json["choices"]
+            if choices and isinstance(choices[0], dict):
+                message_data = choices[0].get("message", {})
+                return message_data.get("content", "Error: No valid response content found.")
         
         return f"Unexpected API response format: {response_json}"
 
@@ -49,9 +45,21 @@ def get_mistral_response(message):
 async def start(update: Update, context: CallbackContext):
     await update.message.reply_text("Hello! I am a Telegram bot powered by Mistral AI. Send me a message!")
 
-# Message handler
+# Message handler with duplicate message prevention
 async def handle_message(update: Update, context: CallbackContext):
     user_message = update.message.text
+
+    # Prevent duplicate responses by checking the message ID
+    if "processed_messages" not in context.bot_data:
+        context.bot_data["processed_messages"] = set()
+
+    if update.message.message_id in context.bot_data["processed_messages"]:
+        print("Duplicate message detected, ignoring...")
+        return
+
+    # Store message ID to prevent duplicate processing
+    context.bot_data["processed_messages"].add(update.message.message_id)
+
     bot_response = get_mistral_response(user_message)
     await update.message.reply_text(bot_response)
 
