@@ -9,12 +9,12 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
 
 def escape_markdown_v2(text):
-    """Escapes special characters for Telegram MarkdownV2."""
-    special_chars = "_*[]()~`>#+-=|{}.!"
+    """Escapes special characters for Telegram MarkdownV2, except * for bold formatting."""
+    special_chars = "_[]()~`>#+-=|{}.!"
     return "".join(f"\\{char}" if char in special_chars else char for char in text)
 
 def format_response(text):
-    """Formats API response for Telegram with proper MarkdownV2."""
+    """Formats API response for Telegram with MarkdownV2."""
     if not text:
         return "Error: No valid response content found."
 
@@ -22,10 +22,10 @@ def format_response(text):
     text = re.sub(r"(?m)^###\s*", "📌 ", text)  # Convert ### to 📌
     text = re.sub(r"(?m)^####\s*", "🔹 ", text)  # Convert #### to 🔹
 
-    # Convert **bold** to Telegram *bold* format
+    # Convert **bold** to Telegram MarkdownV2 *bold*
     text = re.sub(r"\*\*(.*?)\*\*", r"*\1*", text)
 
-    # Escape Telegram MarkdownV2 special characters
+    # Escape MarkdownV2 special characters (except *)
     return escape_markdown_v2(text)
 
 # Function to call Mistral API
