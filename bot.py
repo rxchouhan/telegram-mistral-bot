@@ -14,13 +14,13 @@ def format_response(text):
         return "Error: No valid response content found."
 
     # Escape special characters for Telegram MarkdownV2
-    escape_chars = "_~`>#+-=|{}.!"
+    escape_chars = "_~`>+=|{}.!"
     for char in escape_chars:
         text = text.replace(char, f"\\{char}")
 
     # Convert headers
-    text = re.sub(r"(?m)^###\s", "📌 ", text)  # Convert ### to 📌
-    text = re.sub(r"(?m)^####\s", "🔹 ", text)  # Convert #### to 🔹
+    text = re.sub(r"(?m)^###\s*", "📌 ", text)  # Convert ### to 📌
+    text = re.sub(r"(?m)^####\s*", "🔹 ", text)  # Convert #### to 🔹
 
     # Convert **bold** to *bold* (Telegram format)
     text = re.sub(r"\*\*(.*?)\*\*", r"*\1*", text)
