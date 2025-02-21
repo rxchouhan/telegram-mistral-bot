@@ -20,9 +20,12 @@ def format_response(text):
     for char in escape_chars:
         text = text.replace(char, f"\\{char}")
 
-    # Convert headings and bold text
+    # Convert headings
     text = text.replace("### ", "📌 ")  # Convert ### to 📌
-    text = re.sub(r"\*\*(.*?)\*\*", r"*\1*", text)  # Convert **bold** to *bold*
+    text = text.replace("#### ", "🔹 ")  # Convert #### to 🔹
+
+    # Convert **bold** to *bold*
+    text = re.sub(r"\*\*(.*?)\*\*", r"*\1*", text)
 
     return text
 
