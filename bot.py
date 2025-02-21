@@ -1,7 +1,7 @@
+import os
+import requests
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, CallbackContext
-import requests
-import os
 
 # Load API keys from environment variables
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -15,26 +15,28 @@ def get_mistral_response(message):
         "Content-Type": "application/json"
     }
     payload = {
-        "model": "mistral-small-latest",  # Ensure correct model name
+        "model": "mistral-small-latest",
         "prompt": message,
         "max_tokens": 100
     }
-    
+
     try:
         response = requests.post(url, headers=headers, json=payload)
         response_json = response.json()
 
-        # Debugging: Print API response in logs
+        # Print API response for debugging
         print("Mistral API Response:", response_json)
 
         # Extract AI-generated text
-        if "choices" in response_json and len(response_json["choices"]) > 0:
-            return response_json["choices"][0].get("text", "No response generated.")
+        if "choices" in response_json and response_json["choices"]:
+            return response_json["choices"][0].get("text", "No text returned by Mistral.")
+        elif "error" in response_json:
+            return f"Error: {response_json['error']}"
         else:
-            return "Sorry, no valid response from Mistral."
-    
+            return "Unexpected API response format."
+
     except Exception as e:
-        return f"Error: {str(e)}"
+        return f"API Error: {str(e)}"
 
 # Start command
 async def start(update: Update, context: CallbackContext):
