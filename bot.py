@@ -17,7 +17,7 @@ def get_mistral_response(message):
     payload = {
         "model": "mistral-small-latest",
         "messages": [{"role": "user", "content": message}],
-        "max_tokens": 100
+        "max_tokens": 500  # Increased from 100 to 500 for longer responses
     }
 
     try:
