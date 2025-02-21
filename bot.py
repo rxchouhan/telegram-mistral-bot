@@ -9,14 +9,14 @@ MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
 
 # Function to call Mistral API
 def get_mistral_response(message):
-    url = "https://api.mistral.ai/v1/chat/completions"  # Updated endpoint
+    url = "https://api.mistral.ai/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {MISTRAL_API_KEY}",
         "Content-Type": "application/json"
     }
     payload = {
         "model": "mistral-small-latest",
-        "messages": [{"role": "user", "content": message}],  # Updated payload
+        "messages": [{"role": "user", "content": message}],
         "max_tokens": 100
     }
 
@@ -24,19 +24,26 @@ def get_mistral_response(message):
         response = requests.post(url, headers=headers, json=payload)
         response_json = response.json()
 
-        # Print API response for debugging
+        # Print full API response for debugging
         print("Mistral API Raw Response:", response_json)
 
-        # Extract AI-generated text
-        if "choices" in response_json and response_json["choices"]:
-            return response_json["choices"][0]["message"]["content"]
-        elif "error" in response_json:
-            return f"Error: {response_json['error']['message']}"
-        else:
-            return f"Unexpected API response format: {response_json}"
+        # Ensure the response contains 'choices' and extract content safely
+        if isinstance(response_json, dict):
+            if "choices" in response_json and response_json["choices"]:
+                first_choice = response_json["choices"][0]
+                if isinstance(first_choice, dict) and "message" in first_choice and "content" in first_choice["message"]:
+                    return first_choice["message"]["content"]
+                else:
+                    return "Error: No valid response content found."
+            elif "error" in response_json:
+                return f"Error: {response_json['error'].get('message', 'Unknown API error')}"
+        
+        return f"Unexpected API response format: {response_json}"
 
+    except requests.exceptions.RequestException as e:
+        return f"API Request Error: {str(e)}"
     except Exception as e:
-        return f"API Error: {str(e)}"
+        return f"Unexpected Error: {str(e)}"
 
 # Start command
 async def start(update: Update, context: CallbackContext):
